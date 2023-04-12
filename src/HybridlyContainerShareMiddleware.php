@@ -19,6 +19,7 @@ class HybridlyContainerShareMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         app(HybridlyShare::class)->sync();
+
         return $next($request);
     }
 }

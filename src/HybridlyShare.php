@@ -233,6 +233,7 @@ class HybridlyShare
                 return true;
             }
         }
+
         return false;
     }
 
