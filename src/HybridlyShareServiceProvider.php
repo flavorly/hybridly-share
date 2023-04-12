@@ -4,10 +4,12 @@ namespace Flavorly\HybridlyShare;
 
 use Closure;
 use Hybridly\Hybridly;
+use Hybridly\HybridlyServiceProvider;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\RedirectResponse;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Illuminate\Contracts\Http\Kernel;
 
 class HybridlyShareServiceProvider extends PackageServiceProvider
 {
@@ -15,6 +17,7 @@ class HybridlyShareServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('hybridly-share')
+            ->publishesServiceProvider(HybridlyServiceProvider::class)
             ->hasConfigFile();
     }
 
@@ -50,18 +53,27 @@ class HybridlyShareServiceProvider extends PackageServiceProvider
             });
         }
 
-        // Tweak the RedirectResponse to add the Inertia Flash
+
+        // Actual container Macro
+        if (! Hybridly::hasMacro('container')) {
+            Hybridly::macro('container', function (): HybridlyShare {
+                return app(HybridlyShare::class);
+            });
+        }
+
+        // Tweak the RedirectResponse to add the hybridly Flash
         RedirectResponse::macro('hybridly', function ($key, $value, bool $append = false): RedirectResponse {
             $key = is_array($key) ? $key : [$key => $value];
             foreach ($key as $k => $v) {
-                if ($append) {
-                    hybridly()->append($k, $v);
-                } else {
-                    hybridly()->share($k, $v);
-                }
+                $append ? hybridly()->append($k, $v) : hybridly()->share($k, $v);
             }
             /** @var RedirectResponse $this */
             return $this;
         });
+
+        // Append Middleware
+        $kernel = $this->app->make(Kernel::class);
+        $kernel->appendMiddlewareToGroup('web', HybridlyContainerShareMiddleware::class);
+        $kernel->appendToMiddlewarePriority(HybridlyContainerShareMiddleware::class);
     }
 }

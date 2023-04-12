@@ -7,8 +7,7 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/flavorly/hybridly-share/Check%20&%20fix%20styling?label=code%20style)](https://github.com/flavorly/hybridly-share/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/flavorly/hybridly-share.svg?style=flat-square)](https://packagist.org/packages/flavorly/hybridly-share)
 
-A Quick way to flash & share variables to [Hybridly](https://hybridly.dev/) that persist on session or cache. Really useful for redirects & returns!
-Sharing to Hybridly anywhere :)
+A Quick way to flash & share variables to [Hybridly](https://hybridly.dev/) that persist on session or cache & across requests different requests.
 
 ## Installation
 
@@ -59,7 +58,7 @@ return [
     |
     | Here you may configure the keys that should be persisted on the session,
     | even if they are empty they will be mapped to their primitives configured here.
-    |
+    | Might not be needed since hybridly provides a persist method.
     */
     'persistent-keys' => [
         // 'some-key' => 'some-value',
@@ -73,11 +72,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | The URls to ignore by default, because hybridly runs on web middleware
-    | Default For URLS: ['broadcasting/auth']
+    | Default For URLS: ['broadcasting/auth',...]
     |
     */
     'ignore_urls' => [
+         'nova-api*',
+        'filament-api*',
         'broadcasting/auth',
+        'telescope*',
+        'horizon*',
+        '_debugbar*',
+        '_ignition*',
     ],
 ];
 ```
@@ -89,61 +94,33 @@ Keep in the mind that the values will only be kept on the current or next reques
 You may also use closures that under-the-hood will be converted to Laravel Closure Serializer ( Previously Opis )
 
 ```php
-use Flavorly\HybridlyShare\HybridlyShare;
-
-// Resolve from container
-$flash = app(\Flavorly\HybridlyShare\HybridlyShare::class);
-$flash->share('foo', 'bar');
-
 // Or using the helper
-hybridly_share()->share('foo', 'bar');
-
-// With a closure that will be serialized
-hybridly_share()->share('foo', fn() => 'bar');
-
-// With a nested closure
-hybridly_share()->share('foo', ['bar' => 'foo', 'baz' => fn() => 'bar']);
+hybridly()->container()->share('foo', 'bar');
+hybridly()->container()->share('foo', fn() => 'bar');
+hybridly()->container()->append('fruits','bananas');
+hybridly()->container()->append('fruits','potatoes');
+hybridly()->container()->share('foo', ['bar' => 'foo', 'baz' => fn() => 'bar']);
 
 // On Controllers return back()
 return back()->hybridly('foo', 'bar');
-
-// return back() + Closures
-return back()->hybridly('foo', function () {
-    return 'bar';
-});
-
-// Or the way cool way
-hybridly_share()->share('foo', fn() => 'bar');
-
-// Returning + the cool way
 return back()->hybridly('foo', fn() => 'bar');
 
-
-// Appending Data
-hybridly_share()->share('fruits', 'bananas',true);
-hybridly_share()->share('fruits', 'oranges', true);
-
 // Conditional Sharing
-hybridly_share()->shareIf($foo === true, 'foo', 'bar');
-hybridly_share()->shareUnless($foo === false, 'foo', 'bar');
-
-// Appending
-// You can also use append on regular share method as the third parameter
-hybridly_share()->append('foo', 'bar');
-
+hybridly()->container()->shareIf($foo === true, 'foo', 'bar');
+hybridly()->container()->shareUnless($foo === false, 'foo', 'bar');
 // Sharing to a user
 // Only available if driver is cache, otherwise session will always use the current logged user
-hybridly_share()->forUser($user)->append('foo', 'bar');
+hybridly()->container()->forUser($user)->append('foo', 'bar');
 ```
 
 # Why Hybridly Share?
 
 This package is intended to be used with the [Hybridly](https://hybridly.dev/) framework. 
-Hybridly provides a nice way to share variables, but sometimes you might want to share data from somewhere else in your code.
+Hybridly provides a nice way to share variables, but sometimes you might want the data to persist on the session or cache.
 
 Few use cases :
 - Sharing data before a redirect ( Ex: back()->with('foo','bar') can be replicated with back()->hybridly('foo','bar') )
-- Sharing data from a controller to a view without using hybridly()->share()
+- Sharing data from a request that will end up on a redirect or a new lifecycle.
 - Sharing data from a service directly
 - Sharing data from any point of your code before serving a request/page
 - Sharing data from a command/job to a specific user

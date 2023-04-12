@@ -6,8 +6,8 @@ return [
     | Driver Configuration
     |--------------------------------------------------------------------------
     |
-    | You can configure inertia flash to use session or cache as the driver.
-    | when using the cache driver inertia flash will leverage your current
+    | You can configure hybridly share to use session or cache as the driver.
+    | when using the cache driver hybridly flash will leverage your current
     | cache driver and attempt to save the temporary shared keys there.
     | A unique key is used to generate the unique key for each user
     |
@@ -42,11 +42,17 @@ return [
     | Ignore URLs & Params
     |--------------------------------------------------------------------------
     |
-    | The URls to ignore by default, because inertia runs on web middleware
-    | Default For URLS: ['broadcasting/auth']
+    | The URls to ignore by default, because hybridly runs on web middleware
+    | Default For URLS: ['broadcasting/auth','nova-api*','filament-api*', etc...]
     |
     */
     'ignore_urls' => [
+        'nova-api*',
+        'filament-api*',
         'broadcasting/auth',
+        'telescope*',
+        'horizon*',
+        '_debugbar*',
+        '_ignition*',
     ],
 ];

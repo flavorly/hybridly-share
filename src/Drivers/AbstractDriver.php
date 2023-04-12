@@ -50,7 +50,7 @@ abstract class AbstractDriver
         return implode(
             '_',
             [
-                config('hybridly-share.prefix_key', 'inertia_container_'),
+                config('hybridly-share.prefix_key', 'hybridly_container_'),
                 $this->primaryKey,
             ]
         );

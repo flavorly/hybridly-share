@@ -44,7 +44,7 @@ class HybridlyShare
      * @throws DriverNotSupportedException
      * @throws PhpVersionNotSupportedException
      */
-    public function share(string $key, $value, bool $append = false): static
+    public function share(string $key, mixed $value, bool $append = false): static
     {
         // Ensure we serialize the value for sharing
         $value = $this->serializeValue($value);
@@ -66,7 +66,7 @@ class HybridlyShare
      * @throws DriverNotSupportedException
      * @throws PhpVersionNotSupportedException
      */
-    public function append(string $key, $value): static
+    public function append(string $key, mixed $value): static
     {
         return $this->share($key, $value, true);
     }
@@ -79,7 +79,7 @@ class HybridlyShare
      * @throws DriverNotSupportedException
      * @throws PhpVersionNotSupportedException
      */
-    public function shareIf(bool $condition, string $key, $value, bool $append = false): static
+    public function shareIf(bool $condition, string $key, mixed $value, bool $append = false): static
     {
         if ($condition) {
             return $this->share($key, $value, $append);
@@ -96,7 +96,7 @@ class HybridlyShare
      * @throws DriverNotSupportedException
      * @throws PhpVersionNotSupportedException
      */
-    public function shareUnless(bool $condition, string $key, $value, bool $append = false): static
+    public function shareUnless(bool $condition, string $key, mixed $value, bool $append = false): static
     {
         return $this->shareIf(! $condition, $key, $value, $append);
     }
@@ -116,7 +116,7 @@ class HybridlyShare
 
     /**
      * Flush the items from the driver
-     * And also from inertia
+     * And also from hybridly
      *
      * @throws DriverNotSupportedException
      */
@@ -135,7 +135,7 @@ class HybridlyShare
      *
      * @throws DriverNotSupportedException
      */
-    public function flushDriver(): static
+    protected function flushDriver(): static
     {
         $this->getDriver()->flush();
 
@@ -150,9 +150,9 @@ class HybridlyShare
      *
      * @throws DriverNotSupportedException
      */
-    public function shareToHybridly(bool $flush = true): static
+    public function sync(bool $flush = true): static
     {
-        if (! $this->shouldIgnore()) {
+        if ($this->shouldIgnore()) {
             return $this;
         }
 
@@ -165,7 +165,7 @@ class HybridlyShare
             collect($persistentKeys)->each(fn ($value, $key) => hybridly()->share($key, $value));
         }
 
-        // Share with Inertia
+        // Share with hybridly
         $this->container->each(fn ($value, $key) => hybridly()->share($key, $value));
 
         // Flush on sharing
@@ -182,9 +182,9 @@ class HybridlyShare
      *
      * @throws DriverNotSupportedException
      */
-    public function getShared(bool $flush = true): array
+    public function shared(bool $flush = false): array
     {
-        if (! $this->shouldIgnore()) {
+        if ($this->shouldIgnore()) {
             return [];
         }
 
@@ -224,13 +224,16 @@ class HybridlyShare
     {
         $request = $request ?? request();
         $ignoreUrls = collect(config('hybridly-share.ignore_urls', ['broadcasting/auth']));
-        foreach ($ignoreUrls as $url) {
-            if (str_contains($request->url(), $url)) {
-                return false;
+        foreach ($ignoreUrls as $except) {
+            if ($except !== '/') {
+                $except = trim($except, '/');
+            }
+
+            if ($request->is($except)) {
+                return true;
             }
         }
-
-        return true;
+        return false;
     }
 
     /**
