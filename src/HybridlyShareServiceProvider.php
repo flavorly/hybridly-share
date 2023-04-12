@@ -5,11 +5,11 @@ namespace Flavorly\HybridlyShare;
 use Closure;
 use Hybridly\Hybridly;
 use Hybridly\HybridlyServiceProvider;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\RedirectResponse;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Illuminate\Contracts\Http\Kernel;
 
 class HybridlyShareServiceProvider extends PackageServiceProvider
 {
