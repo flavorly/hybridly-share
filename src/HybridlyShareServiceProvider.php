@@ -48,6 +48,7 @@ class HybridlyShareServiceProvider extends PackageServiceProvider
                     $key,
                     array_merge_recursive($sharedValue, [$value])
                 );
+
                 // @phpstan-ignore-next-line
                 return $this;
             });
@@ -67,6 +68,7 @@ class HybridlyShareServiceProvider extends PackageServiceProvider
             foreach ($key as $k => $v) {
                 $append ? hybridly()->append($k, $v) : hybridly()->share($k, $v);
             }
+
             /** @var RedirectResponse $this */
             return $this;
         });
